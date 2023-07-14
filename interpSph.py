@@ -38,6 +38,22 @@ def makeInterp(data: np.ndarray, theta: np.ndarray, phi: np.ndarray, s: float = 
     return lut
 
 
+def mask_spread(mask: np.ndarray) -> np.ndarray:
+    mask = np.logical_or(mask, np.roll(mask, 1, axis=0))
+    mask = np.logical_or(mask, np.roll(mask, 1, axis=1))
+    mask = np.logical_or(mask, np.roll(mask, -1, axis=0))
+    mask = np.logical_or(mask, np.roll(mask, -1, axis=1))
+    return mask
+
+
+def mask_border(mask: np.ndarray, width: int=1) -> np.ndarray:
+    new_mask = mask.copy()
+    for i in range(width):
+        new_mask = mask_spread(new_mask)
+    new_mask = np.logical_xor(new_mask, mask)
+    return new_mask
+
+
 def plot1D(data: np.ndarray, theta: np.ndarray, phi: np.ndarray, interpolator: Callable = None) -> None:
     plt.subplots(1, 2)
     plt.title("1D")
