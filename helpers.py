@@ -92,3 +92,19 @@ class F3:
         coss = np.dot(self._base, point)
         value = np.exp(-coss**2/2/self.sigma**2)
         return value
+
+
+def mask_spread(mask: np.ndarray) -> np.ndarray:
+    mask = np.logical_or(mask, np.roll(mask, 1, axis=0))
+    mask = np.logical_or(mask, np.roll(mask, 1, axis=1))
+    mask = np.logical_or(mask, np.roll(mask, -1, axis=0))
+    mask = np.logical_or(mask, np.roll(mask, -1, axis=1))
+    return mask
+
+
+def mask_border(mask: np.ndarray, width: int=1) -> np.ndarray:
+    new_mask = mask.copy()
+    for i in range(width):
+        new_mask = mask_spread(new_mask)
+    new_mask = np.logical_xor(new_mask, mask)
+    return new_mask
