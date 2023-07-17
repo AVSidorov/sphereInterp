@@ -22,12 +22,13 @@ def spherical2carthesian(theta: [float, np.ndarray],
                          phi: [float, np.ndarray],
                          r: [float, np.ndarray] = None
                          ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    if r is None:
+        r = np.ones_like(theta)
+
     theta = np.atleast_1d(theta)
     phi = np.atleast_1d(phi)
     r = np.atleast_1d(r)
 
-    if r is None:
-        r = np.ones_like(theta)
     z = r * np.cos(theta)
     x = np.cos(phi) * r*np.sin(theta)
     y = np.sin(phi) * r*np.sin(theta)
