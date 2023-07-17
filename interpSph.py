@@ -1,7 +1,9 @@
 from helpers import spherical2carthesian
 
+from typing import Tuple
+
 import numpy as np
-from scipy.interpolate import LSQSphereBivariateSpline, SmoothSphereBivariateSpline
+from scipy.interpolate import LSQSphereBivariateSpline, SmoothSphereBivariateSpline, interp1d
 
 from typing import Any, Callable
 
@@ -28,6 +30,47 @@ def loadFile(filename: str) -> (np.ndarray, np.ndarray, np.ndarray):
 
     return data, theta, phi
 
+
+def fillSphere(data: np.ndarray,
+              theta: np.ndarray,
+              phi: np.ndarray
+             ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    data_l = np.zeros_like(data)
+    data_h = np.zeros_like(data)
+
+    theta_n = np.pi-theta
+
+    bool = np.logical_xor(theta_n > theta.max(), theta_n < theta.min())
+    data_h = data_h[theta_n < theta.min(), :]
+    data_l = data_l[theta_n > theta.max(), :]
+
+    theta_n = theta_n[bool]
+
+    data_h = np.flipud(data_h)
+    data_l = np.flipud(data_l)
+    theta = np.sort(np.concatenate((theta, theta_n)))
+
+    data = np.concatenate((data_h, data, data_l))
+
+    return data, theta, phi
+
+
+def fillNaN(data: np.ndarray,
+              theta: np.ndarray,
+              phi: np.ndarray
+             ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    bool = ~np.isnan(data)
+    data_row = np.ndarray((0, data.shape[1]))
+    for (row, br) in zip(data, bool):
+        interp = interp1d(phi[br], row[br])
+        row = interp(phi).reshape((1, -1))
+        data_row = np.append(data_row, row, axis=0)
+
+    data_col = np.ndarray((data.shape[0], 0))
+    for (col, br) in zip(data.T, bool.T):
+        interp = interp1d(theta[br], col[br])
+        col = interp(theta).reshape((-1, 1))
+        data_col = np.append(data_col, col, axis=1)
 
 def makeInterp(data: np.ndarray, theta: np.ndarray, phi: np.ndarray, s: float = 3.3e-8)\
         -> Callable[[np.ndarray, np.ndarray], None]:
